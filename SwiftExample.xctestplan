@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "CAEFEAA4-CDAC-4458-88C3-DC7B80263D4D",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SwiftExample.xcodeproj",
+        "identifier" : "4979ED1B2B6BE2B400C19ACE",
+        "name" : "SwiftExampleTests"
+      }
+    }
+  ],
+  "version" : 1
+}
