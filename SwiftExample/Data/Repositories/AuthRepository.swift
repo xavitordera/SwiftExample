@@ -55,15 +55,20 @@ struct AuthRepository: AuthRepositoryProtocol {
 
 final class AuthRepositoryMock: AuthRepositoryProtocol {
     func isTokenValid() async -> Bool {
-        false
+       isTokenValidResult
     }
     
     func login(username: String, password: String) async throws {
-        fatalError()
+        switch loginResult {
+        case .success(_):
+            return ()
+        case .failure(let failure):
+            throw failure
+        }
     }
     
     var isTokenValidResult: Bool = false
-    var loginResult: Result<SwiftExample.LoginResponse, SwiftExample.APIError> = .success(.init(accessToken: "accessToken", refreshToken: "refreshToken"))
+    var loginResult: Result<Void, SwiftExample.APIError> = .success(())
     var logoutCalled = false
 
     func logout() {

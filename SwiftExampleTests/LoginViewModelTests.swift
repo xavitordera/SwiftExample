@@ -6,7 +6,7 @@ final class LoginViewModelTests: XCTestCase {
     private var systemUnderTest: LoginViewModel!
     private var authRepository: AuthRepositoryMock!
 
-    override func setUp() {
+    @MainActor override func setUp() {
         super.setUp()
         authRepository = AuthRepositoryMock()
         systemUnderTest = LoginViewModel(repository: authRepository)
@@ -18,41 +18,25 @@ final class LoginViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-
-//    func login(onSuccess: @escaping () -> ()) {
-//        state = .loading
-//        repository.login(username: username, password: password) { [weak self] result in
-//            DispatchQueue.main.async {
-//                switch result {
-//                case .success:
-//                    self?.state = .requestSent
-//                    onSuccess()
-//                case .failure(let error):
-//                    self?.state = .error(error)
-//                }
-//            }
-//        }
-//    }
-
-    func test_login_whenLoginSucceeds_shouldChangeStateToRequestSent() {
+    func test_login_whenLoginSucceeds_shouldChangeStateToRequestSent() async {
         // given
-        authRepository.loginResult = .success(.init(accessToken: "", refreshToken: ""))
+        authRepository.loginResult = .success(())
         let onSuccessExpectation = expectation(description: "onSuccess")
 
         // when
-        systemUnderTest.login { onSuccessExpectation.fulfill() }
+        await systemUnderTest.login { onSuccessExpectation.fulfill() }
 
         // then
-        waitForExpectations(timeout: 0.1)
+        await waitForExpectations(timeout: 0.1)
 
-        if case .requestSent = systemUnderTest.state {
+        if case .requestSent = await systemUnderTest.state {
             XCTAssert(true)
         } else {
             XCTFail()
         }
     }
 
-    func test_login_whenLoginFails_shouldChangeStateToError() {
+    @MainActor func test_login_whenLoginFails_shouldChangeStateToError() async {
         // given
         authRepository.loginResult = .failure(.generic(""))
         
@@ -66,9 +50,9 @@ final class LoginViewModelTests: XCTestCase {
             }
         }
 
-        systemUnderTest.login {  }
+        await systemUnderTest.login() { }
 
         // then
-        waitForExpectations(timeout: 0.1)
+        await waitForExpectations(timeout: 0.1)
     }
 }

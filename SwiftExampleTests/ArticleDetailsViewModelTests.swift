@@ -8,7 +8,7 @@ final class ArticleDetailsViewModelTests: XCTestCase {
     private var articlesRepository: ArticlesRepositoryMock!
     private var disposeBag: Set<AnyCancellable>! = []
 
-    override func setUp() {
+    @MainActor override func setUp() {
         super.setUp()
         articlesRepository = ArticlesRepositoryMock()
         systemUnderTest = ArticleDetailViewModel(articleId: 1, articleRepository: articlesRepository)
@@ -21,7 +21,7 @@ final class ArticleDetailsViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-    func test_fetchArticleDetails_whenRequestSucceeds_shouldReturnArticleDetails() {
+    @MainActor func test_fetchArticleDetails_whenRequestSucceeds_shouldReturnArticleDetails() async {
         // given
         let article = ArticleDetailUIModel.mock
         articlesRepository.fetchArticleDetailsResult = .success(article)
@@ -36,27 +36,27 @@ final class ArticleDetailsViewModelTests: XCTestCase {
         }.store(in: &disposeBag)
         // then
 
-        systemUnderTest.fetchArticle()
+        await systemUnderTest.fetchArticle()
 
-        waitForExpectations(timeout: 0.1)
+        await fulfillment(of: [exp])
     }
 
-    func test_fetchArticleDetails_whenRequestFails_shouldReturnError() {
+    func test_fetchArticleDetails_whenRequestFails_shouldReturnError() async {
         // given
         articlesRepository.fetchArticleDetailsResult = .failure(.generic(""))
 
         let exp = expectation(description: "Waiting for fetchArticle to complete")
 
-        systemUnderTest.$state.sink { state in
+        await systemUnderTest.$state.sink { state in
             if case .error = state {
                 exp.fulfill()
             }
         }.store(in: &disposeBag)
 
         // when
-        systemUnderTest.fetchArticle()
+        await systemUnderTest.fetchArticle()
 
         // then
-        waitForExpectations(timeout: 0.1)
+        await fulfillment(of: [exp])
     }
 }

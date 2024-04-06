@@ -2,43 +2,31 @@
 import Foundation
 
 final class URLSessionMock: URLSessionProtocol {
-    
     var data: Data?
     var response: URLResponse?
     var error: Error?
 
-    func dataTask(
-        with request: URLRequest,
-        completionHandler: @escaping (SwiftExample.DataTaskResult)
-    ) -> URLSessionDataTask {
-        completionHandler(data, response, error)
-        return URLSessionDataTaskMock()
+    func data(for request: URLRequest, delegate: (any URLSessionTaskDelegate)?) async throws -> (Data, URLResponse) {
+        if let data, let response  {
+            return (data, response)
+        }
+        
+        throw error ?? APIError.noData
     }
-}
-
-final class URLSessionDataTaskMock: URLSessionDataTask {
-    override func resume() {}
 }
 
 final class APIClientMock: APIClientProtocol {
     var result: Result<Decodable, APIError>?
-
-    func request<T>(request: URLRequest, completion: @escaping (Result<T, SwiftExample.APIError>) -> Void) where T : Decodable {
-
-
-            switch result {
-            case .success(let response):
-                if let decodable = response as? T {
-                    completion(.success(decodable))
-                } else {
-                    completion(.failure(.generic("Error")))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            case .none:
-                completion(.failure(.generic("Error")))
-            }
-
+    
+    func request<T>(request: URLRequest) async throws -> T where T : Decodable {
+        switch result {
+        case .success(let response):
+            return response as! T
+        case .failure(let error):
+            throw error
+        case .none:
+            throw APIError.noData
+        }
     }
 }
 

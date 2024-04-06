@@ -17,77 +17,51 @@ final class ArticlesRepositoryTests: XCTestCase {
         super.tearDown()
     }
 
-    func test_fetchArticles_whenRequestSucceeds_shouldReturnArticles() {
+    func test_fetchArticles_whenRequestSucceeds_shouldReturnArticles() async throws {
         // given
         let articles = [ArticleDataModel.mock]
         apiClient.result = .success(articles)
 
         // when
-        var result: Result<[ArticleUIModel], APIError>?
-        systemUnderTest.fetchArticles { response in
-            result = response
-        }
-
-        // then
-        if case .success(let articles) = result {
-            XCTAssertEqual(articles, articles)
-        } else {
-            XCTFail()
-        }
+        let articlesRes = try await systemUnderTest.fetchArticles()
+        XCTAssertEqual([.mock], articlesRes)
     }
 
-    func test_fetchArticles_whenRequestFails_shouldReturnError() {
+    func test_fetchArticles_whenRequestFails_shouldReturnError() async {
         // given
         apiClient.result = .failure(.generic(""))
 
-        // when
-        var result: Result<[ArticleUIModel], APIError>?
-        systemUnderTest.fetchArticles { response in
-            result = response
-        }
-
         // then
-        if case .failure = result {
-            XCTAssert(true)
-        } else {
+        do {
+            _ = try await systemUnderTest.fetchArticles()
             XCTFail()
+        } catch _ {
+            XCTAssert(true)
         }
     }
 
-    func test_fetchArticleDetails_whenRequestSucceeds_shouldReturnArticleDetails() {
+    func test_fetchArticleDetails_whenRequestSucceeds_shouldReturnArticleDetails() async throws {
         // given
         let article = ArticleDetailsDataModel.mock
         apiClient.result = .success(article)
 
         // when
-        var result: Result<ArticleDetailUIModel, APIError>?
-        systemUnderTest.fetchArticleDetails(id: 1) { response in
-            result = response
-        }
+        let articleRes = try await systemUnderTest.fetchArticleDetails(id: 1)
 
         // then
-        if case .success(let article) = result {
-            XCTAssertEqual(article, article)
-        } else {
-            XCTFail()
-        }
+        XCTAssertEqual(.mock, articleRes)
     }
 
-    func test_fetchArticleDetails_whenRequestFails_shouldReturnError() {
+    func test_fetchArticleDetails_whenRequestFails_shouldReturnError() async {
         // given
         apiClient.result = .failure(.generic(""))
 
         // when
-        var result: Result<ArticleDetailUIModel, APIError>?
-        systemUnderTest.fetchArticleDetails(id: 1) { response in
-            result = response
-        }
-
-        // then
-        if case .failure = result {
-            XCTAssert(true)
-        } else {
+        do {
+            let _ = try await systemUnderTest.fetchArticleDetails(id: 1)
             XCTFail()
+        } catch _ {
+            XCTAssert(true)
         }
     }
 }

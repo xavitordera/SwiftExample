@@ -27,7 +27,7 @@ struct APIClient: APIClientProtocol {
 
     func request<T>(request: URLRequest) async throws -> T where T : Decodable  {
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await urlSession.data(for: request, delegate: nil)
         
         guard let response = response as? HTTPURLResponse else {
             throw APIError.noData

@@ -21,7 +21,7 @@ final class APIClientTests: XCTestCase {
         super.tearDown()
     }
     
-    func test_request_whenRequestFails_shouldReturnError() {
+    func test_request_whenRequestFails_shouldReturnError() async {
         // given
         let request = URLRequest(url: URL(string: "http://test.com")!)
         let error = NSError(domain: "test", code: 0, userInfo: nil)
@@ -30,21 +30,17 @@ final class APIClientTests: XCTestCase {
         struct Helper: Decodable {}
 
         // when
-        var result: Result<Helper, APIError>?
-        apiClient.request(request: request) { (response: Result<Helper, APIError>) in
-            result = response
+        do {
+            let _ : Helper = try await apiClient.request(request: request)
+            XCTFail()
+        } catch _ {
+            XCTAssert(true)
         }
         
         // then
-        if case .failure(.unknown(let errorReceived)) = result {
-            XCTAssertEqual(errorReceived as NSError, error)
-            XCTAssert(true)
-        } else {
-            XCTFail()
-        }
     }
     
-    func test_request_whenRequestSucceeds_shouldReturnDecodedObject() {
+    func test_request_whenRequestSucceeds_shouldReturnDecodedObject() async throws {
         // given
         let request = URLRequest(url: URL(string: "http://test.com")!)
         let data = Data("""
@@ -59,13 +55,9 @@ final class APIClientTests: XCTestCase {
         decoder.decodeResult = .success(object)
 
         // when
-        var result: Result<ArticleDataModel, APIError>?
-        apiClient.request(request: request) { (response: Result<ArticleDataModel, APIError>) in
-            result = response
-        }
-        let receivedObject: ArticleDataModel? = if case .success(let object) = result { object } else { nil }
+        let result: ArticleDataModel = try await apiClient.request(request: request)
 
         // then
-        XCTAssertEqual(receivedObject, object)
+        XCTAssertEqual(result, object)
     }
 }

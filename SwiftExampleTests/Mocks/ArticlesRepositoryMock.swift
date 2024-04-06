@@ -4,13 +4,23 @@ import Foundation
 final class ArticlesRepositoryMock: ArticlesRepositoryProtocol {
     var fetchArticlesResult: Result<[ArticleUIModel], APIError> = .success([.mock])
     var fetchArticleDetailsResult: Result<ArticleDetailUIModel, APIError> = .success(.mock)
-
-    func fetchArticles(completion: @escaping (Result<[SwiftExample.ArticleUIModel], SwiftExample.APIError>) -> Void) {
-        completion(fetchArticlesResult)
+    
+    func fetchArticles() async throws -> [SwiftExample.ArticleUIModel] {
+        switch fetchArticlesResult {
+        case .success(let success):
+            return success
+        case .failure(let failure):
+            throw failure
+        }
     }
     
-    func fetchArticleDetails(id: Int, completion: @escaping (Result<SwiftExample.ArticleDetailUIModel, SwiftExample.APIError>) -> Void) {
-        completion(fetchArticleDetailsResult)
+    func fetchArticleDetails(id: Int) async throws -> SwiftExample.ArticleDetailUIModel {
+        switch fetchArticleDetailsResult {
+        case .success(let success):
+            return success
+        case .failure(let failure):
+            throw failure
+        }
     }
 }
 
@@ -18,9 +28,9 @@ extension ArticleUIModel {
     static var mock: ArticleUIModel {
         .init(title: "title",
               summary: "summary",
-              thumbnailURL: nil,
+              thumbnailURL: URL(string: "thumbnailUrl"),
               date: "date",
-              id: 0)
+              id: 1)
     }
 }
 
@@ -28,8 +38,8 @@ extension ArticleDetailUIModel {
     static var mock: ArticleDetailUIModel {
         .init(content: "content",
               date: "date",
-              id: 0,
-              imageURL: nil,
-              title: "")
+              id: 1,
+              imageURL: URL(string: "imageUrl"),
+              title: "title")
     }
 }

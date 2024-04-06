@@ -9,7 +9,7 @@ final class ArticlesListViewModelTests: XCTestCase {
     private var authRepository: AuthRepositoryMock!
     private var disposeBag: Set<AnyCancellable>! = []
 
-    override func setUp() {
+    @MainActor override func setUp() {
         super.setUp()
         articlesRepository = ArticlesRepositoryMock()
 
@@ -25,7 +25,7 @@ final class ArticlesListViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-    func test_fetchArticles_whenRequestSucceeds_shouldReturnArticles() {
+    @MainActor func test_fetchArticles_whenRequestSucceeds_shouldReturnArticles() async {
         // given
         let articles = [ArticleUIModel.mock]
         articlesRepository.fetchArticlesResult = .success(articles)
@@ -39,13 +39,13 @@ final class ArticlesListViewModelTests: XCTestCase {
             }
         }.store(in: &disposeBag)
 
-        systemUnderTest.fetchArticles()
+        await systemUnderTest.fetchArticles()
 
         // then
         waitForExpectations(timeout: 0.1)
     }
 
-    func test_fetchArticles_whenRequestFails_shouldReturnError() {
+    @MainActor func test_fetchArticles_whenRequestFails_shouldReturnError() async {
         // given
         articlesRepository.fetchArticlesResult = .failure(.generic(""))
 
@@ -58,13 +58,13 @@ final class ArticlesListViewModelTests: XCTestCase {
             }
         }.store(in: &disposeBag)
 
-        systemUnderTest.fetchArticles()
+        await systemUnderTest.fetchArticles()
 
         // then
         waitForExpectations(timeout: 0.1)
     }
 
-    func test_logout_callsRepository() {
+    @MainActor func test_logout_callsRepository() {
         // when
         systemUnderTest.logout()
 

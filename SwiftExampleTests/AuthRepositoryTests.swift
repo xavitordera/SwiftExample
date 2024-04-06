@@ -21,83 +21,73 @@ final class AuthRepositoryTests: XCTestCase {
         super.tearDown()
     }
 
-    func test_login_whenLoginSucceeds_shouldSaveTokens() {
+    func test_login_whenLoginSucceeds_shouldSaveTokens() async throws {
         // given
         let loginData = LoginResponse(accessToken: "token", refreshToken: "token refresh")
         apiClient.result = .success(loginData)
 
         // when
-        systemUnderTest.login(username: "username", password: "password") { result in
-            // then
-            XCTAssertEqual(self.keychain.requestAccessToken(), "token")
-            XCTAssertEqual(self.keychain.requestRefreshToken(), "token refresh")
-
-            if case .success(let response) = result {
-                XCTAssertEqual(response.accessToken, "token")
-                XCTAssertEqual(response.refreshToken, "token refresh")
-            } else {
-                XCTFail()
-            }
-        }
+        try await systemUnderTest.login(username: "username", password: "password")
+        // then
+        XCTAssertEqual(self.keychain.requestAccessToken(), "token")
+        XCTAssertEqual(self.keychain.requestRefreshToken(), "token refresh")
     }
 
-    func test_login_whenLoginFails_shouldNotSaveTokens() {
+    func test_login_whenLoginFails_shouldNotSaveTokens() async throws {
         // given
         apiClient.result = .failure(.generic(""))
 
         // when
-        systemUnderTest.login(username: "username", password: "password") { result in
-            // then
+        do {
+            try await systemUnderTest.login(username: "username", password: "password")
+            
+            XCTFail()
+        } catch let error {
             XCTAssertNil(self.keychain.requestAccessToken())
             XCTAssertNil(self.keychain.requestRefreshToken())
-
-            if case .failure = result {
-                XCTAssert(true)
-            } else {
-                XCTFail()
-            }
         }
     }
 
-    func test_isTokenValid_whenTokenIsValid_shouldReturnTrue() {
+    func test_isTokenValid_whenTokenIsValid_shouldReturnTrue() async {
         // given
         let loginData = LoginResponse(accessToken: "token", refreshToken: "token refresh")
         apiClient.result = .success(loginData)
         keychain.save(key: KeychainClient.Keys.refreshToken, data: Data("".utf8))
 
         // when
-        systemUnderTest.isTokenValid { isValid in
-            XCTAssertTrue(isValid)
-            XCTAssertEqual(self.keychain.requestAccessToken(), "token")
-            XCTAssertEqual(self.keychain.requestRefreshToken(), "token refresh")
-        }
+        let isValid = await systemUnderTest.isTokenValid()
+        
+        // then
+        XCTAssertTrue(isValid)
+        XCTAssertEqual(self.keychain.requestAccessToken(), "token")
+        XCTAssertEqual(self.keychain.requestRefreshToken(), "token refresh")
     }
 
-    func test_isTokenValid_whenTokenIsInvalid_shouldReturnFalse() {
+    func test_isTokenValid_whenTokenIsInvalid_shouldReturnFalse() async {
         // given
         let loginData = LoginResponse(accessToken: "token", refreshToken: "token refresh")
         apiClient.result = .failure(.generic(""))
 
         // when
-        systemUnderTest.isTokenValid { isValid in
-            XCTAssertFalse(isValid)
-            XCTAssertNil(self.keychain.requestAccessToken())
-            XCTAssertNil(self.keychain.requestRefreshToken())
-        }
+        let isValid = await systemUnderTest.isTokenValid()
+        
+        // then
+        XCTAssertFalse(isValid)
+        XCTAssertNil(self.keychain.requestAccessToken())
+        XCTAssertNil(self.keychain.requestRefreshToken())
     }
 
-    func test_logout_whenLogoutSucceeds_shouldRemoveTokens() {
+    func test_logout_whenLogoutSucceeds_shouldRemoveTokens() async throws {
         // given
         let loginData = LoginResponse(accessToken: "token", refreshToken: "token refresh")
         apiClient.result = .success(loginData)
-
-        systemUnderTest.login(username: "username", password: "password") { _ in
-            // when
-            self.systemUnderTest.logout()
-            // then
-            XCTAssertNil(self.keychain.requestAccessToken())
-            XCTAssertNil(self.keychain.requestRefreshToken())
-        }
+        
+        try await systemUnderTest.login(username: "username", password: "password")
+        // when
+        systemUnderTest.logout()
+        // then
+        XCTAssertNil(self.keychain.requestAccessToken())
+        XCTAssertNil(self.keychain.requestRefreshToken())
     }
 }
 
